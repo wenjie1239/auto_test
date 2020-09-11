@@ -11,18 +11,16 @@ from .al_fig import *
 
 class AutoMoney():
 
-    def __init__(self,wnname,sleep_time = 10):
+    def __init__(self,wnname=MAIN_WIN_NAME):
         self.status = 0
         self.sv = ScreenViewer()
         self.sv.GetHWND(wnname)
         self.left_x,self.left_y,_ = self.sv.GetWindowPos()
-        self.sleep_time = sleep_time
         self.now_img = 0
         self.recognize_position = RecognizePosition()
         self.map_index = 0
         self.k = PyKeyboard()
         self.m = PyMouse()
-
 
     def screen_img_data(self):
         return self.sv.GetScreenImg()
@@ -30,8 +28,10 @@ class AutoMoney():
     def map_position_distance(self,now_position):
         '''
         :param true_position:  now status position
-        :return:  distance of  the label position and now status position
+        :return: None or distance of  the label position and now status position
         '''
+        if not now_position:
+            return None
         map_index_position = MAP_POSITION[self.map_index]
         return (map_index_position[0] - now_position[0]) ** 2 + (map_index_position[1] - now_position[1]) ** 2
 
@@ -56,21 +56,13 @@ class AutoMoney():
         self.k.tap_key(self.k.tab_key)
         self.status = 1
 
-
     def route_plan(self):
-        #获取 xy坐标图像的位置  hwc
-        position_img = self.now_img[POSITION_Y1:POSITION_Y2,POSITION_X1:POSITION_X2,:]
-        position_data = self.recognize_position.return_position(position_img)   # None or [x,y]
-        if position_data:
-            distince = self.map_position_distance(position_data)
-            if distince <= 50:
-                # 需要将 self.map_index 换成下一个，然后在 寻路。
-                self.change_map_index()
-                self.move_big_map()
-            else:
-                self.move_big_map()
-        else:
-            self.move_big_map()
+        position_img = self.now_img[POSITION_Y1:POSITION_Y2,POSITION_X1:POSITION_X2,:]  #人物当前 坐标的 图像数据
+        position_data = self.recognize_position.return_position(position_img)   #人物当前坐标  None or [x,y]
+        distince = self.map_position_distance(position_data)   #人物当前坐标 和 self.map_index 目标坐标 之间的距离
+        if position_data and distince <= DISTANCE_THRESHOLD:
+            self.change_map_index()
+        self.move_big_map()
 
     def run(self):
         while self.status == 0:
@@ -79,15 +71,12 @@ class AutoMoney():
             if boxes:
                 pass
             else:
+                # 没有 目标，移动人物 到下一个 坐标点。
                 self.route_plan()
-                time.sleep(30)
-                # 点击人物中心 ，让人物停止移动
-                self.m.click(self.left_x + WIN_W/2,self.left_y + WIN_H/2)
+                time.sleep(RUN_TIME)  #等待人物 移动
+                self.m.click(self.left_x + WIN_W/2,self.left_y + WIN_H/2) #点击人物，让人物状态转为静止，self.status = 0
+                time.sleep(2)
                 self.status = 0
-
-
-
-
 
 
 a = '''
@@ -124,6 +113,9 @@ self.status = 0
 2、侦测 是否存在 目标   (训练神经网络 识别目标)
 2.1 yolov4 训练识别 目标 输出目标位置/类别  M,5(cls,x1,y1,x2,y2)
 2.2 通过设定的 cls 和 目标框中的 颜色 进行对比, 符合条件 则 输出 N,4 [x1,y1,x2,y2], 否则 输出 [] 
+
+侦测 目标xxx
+
 
 3、点击目标，进入状态  （可能是 只需要点击固定地方 多次）
 3.1 点击目标输出框的 中心点

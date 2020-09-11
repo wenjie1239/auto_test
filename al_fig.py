@@ -26,8 +26,14 @@ POSITION_Y2 = 0
 POSITION_PARAM_PATH = ''
 ALL_POSITION_ELEMENT = 'XY:' + string.digits
 
+# 跑路的时间，单位秒
+RUN_TIME = 30
 
+#坐标 举例的 阈值
+DISTANCE_THRESHOLD = 100
 
+#主窗口名称
+MAIN_WIN_NAME = ''
 
 
 if __name__ == '__main__':
