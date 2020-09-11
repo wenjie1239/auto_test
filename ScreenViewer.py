@@ -138,7 +138,6 @@ class ScreenViewer:
         #保存图片 或者返回图片数据。
         # img = Image.fromarray(im)
         # img.save(f'image/{self.i}.png')
-
         return im
 
     def GetWindowPos(self):

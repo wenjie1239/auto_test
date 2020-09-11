@@ -29,6 +29,10 @@ class RecognizePosition():
         self.model.eval()
 
     def return_position(self,img_data):
+        '''
+        :param img_data:  the position img data
+        :return:  None or a point position [x,y]
+        '''
         image = F.to_tensor(img_data).unsqueeze(0).to(self.device)
         output = self.model(image)
         encoded_text = output.squeeze().argmax(1)

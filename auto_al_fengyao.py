@@ -1,10 +1,13 @@
 #encoding=utf8
 
+import random
+import time
+from pymouse import PyMouse
+from pykeyboard import PyKeyboard
 
 from .ScreenViewer import ScreenViewer
 from .captcha_finally.status_position import RecognizePosition
-
-from .fig import *
+from .al_fig import *
 
 class AutoMoney():
 
@@ -12,31 +15,77 @@ class AutoMoney():
         self.status = 0
         self.sv = ScreenViewer()
         self.sv.GetHWND(wnname)
+        self.left_x,self.left_y,_ = self.sv.GetWindowPos()
         self.sleep_time = sleep_time
         self.now_img = 0
         self.recognize_position = RecognizePosition()
+        self.map_index = 0
+        self.k = PyKeyboard()
+        self.m = PyMouse()
+
 
     def screen_img_data(self):
         return self.sv.GetScreenImg()
 
+    def map_position_distance(self,now_position):
+        '''
+        :param true_position:  now status position
+        :return:  distance of  the label position and now status position
+        '''
+        map_index_position = MAP_POSITION[self.map_index]
+        return (map_index_position[0] - now_position[0]) ** 2 + (map_index_position[1] - now_position[1]) ** 2
+
+    def change_map_index(self):
+        #先 随机 获取前进的 point  index
+        random_step = random.randint(1,3)
+        #人物 走到 一个位置
+        self.map_index = (self.map_index + random_step) % len(MAP_INDEX)
+
+    def move_big_map(self):
+        # 切换到 当前窗口 现在 pass
+
+        #按下 Tab 键，打开大地图   tap_key 是按一下按键 press_key是 按住按键
+        self.k.tap_key(self.k.tab_key)
+        #点击 窗口的 位置
+        win_x,win_y = BIGMAP_POSITION[self.map_index]
+        win_x = win_x + self.left_x
+        win_y = win_y + self.left_y
+        self.m.move(win_x,win_y)
+        self.m.click(win_x,win_y)
+        #在按一下 tab键 关闭 大地图
+        self.k.tap_key(self.k.tab_key)
+        self.status = 1
+
+
     def route_plan(self):
         #获取 xy坐标图像的位置  hwc
         position_img = self.now_img[POSITION_Y1:POSITION_Y2,POSITION_X1:POSITION_X2,:]
-        position_data = self.recognize_position.return_position(position_img)
-        # if position_data
-
+        position_data = self.recognize_position.return_position(position_img)   # None or [x,y]
+        if position_data:
+            distince = self.map_position_distance(position_data)
+            if distince <= 50:
+                # 需要将 self.map_index 换成下一个，然后在 寻路。
+                self.change_map_index()
+                self.move_big_map()
+            else:
+                self.move_big_map()
+        else:
+            self.move_big_map()
 
     def run(self):
-
         while self.status == 0:
             self.now_img = self.screen_img_data()
-
             boxes = []
-
             if boxes:
                 pass
             else:
                 self.route_plan()
+                time.sleep(30)
+                # 点击人物中心 ，让人物停止移动
+                self.m.click(self.left_x + WIN_W/2,self.left_y + WIN_H/2)
+                self.status = 0
+
+
 
 
 
