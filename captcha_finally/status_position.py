@@ -75,17 +75,18 @@ if __name__ == '__main__':
     image_dir = r"D:\start\ai_play\captcha_finally\image\eval"
     name_list = os.listdir(image_dir)
     for image_name in name_list:
-        ground_truth = image_name.split('/')[-1].split('.')[0]
-        gt = ground_truth.split('_')
-        ground_truth = [gt[1].replace('Y',''),gt[2]]
+        ground_truth = image_name.split('/')[-1].split('.')[0].replace('_',':')
+        # gt = ground_truth.split('_')
+        # ground_truth = [gt[1].replace('Y',''),gt[2]]
         print('ground truth:',ground_truth)
         image = Image.open(os.path.join(image_dir,image_name)).convert('RGB')
         image = F.to_tensor(image).unsqueeze(0).to(device)
         output = model(image)    # 20,1,14    s,N,CLASS
         encoded_text = output.squeeze().argmax(1)   #  S,N,CLASS  S,CLASS  S
         decoded_text = label_converter.decode(encoded_text)
-        decoded_text = clean_position_data(decoded_text)
         print('decode:',decoded_text)
+        decoded_text2 = clean_position_data(decoded_text)
+        print('position:',decoded_text2)
 
 
         if ground_truth == decoded_text:

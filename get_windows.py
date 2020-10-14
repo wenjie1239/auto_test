@@ -12,3 +12,6 @@ def print_all_hwnd():
     for h, t in hwnd_title.items():
         if t is not "":
             print('handdle:',h,'    |title:',t)
+
+
+print_all_hwnd()
