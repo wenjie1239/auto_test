@@ -14,16 +14,20 @@ class AutoMoney():
     def __init__(self,wnname=MAIN_WIN_NAME):
         self.status = 0
         self.sv = ScreenViewer()
-        self.sv.GetHWND(wnname)
-        self.left_x,self.left_y,_ = self.sv.GetWindowPos()
+        self.sv.GetHWND(wnname)   #激活截屏类，获取到 wnname 的窗口句柄
+        self.left_x,self.left_y,_ = self.sv.GetWindowPos() #获取到 窗口左上角的坐标
         self.now_img = 0
-        self.recognize_position = RecognizePosition()
-        self.map_index = 0
-        self.k = PyKeyboard()
-        self.m = PyMouse()
+        self.recognize_position = RecognizePosition()    # 实例化 识别 人物坐标 的类
+        self.map_index = 0                              # 人物坐标 的索引
+        self.k = PyKeyboard()                           # 激活键盘
+        self.m = PyMouse()                              # 激活鼠标
+
 
     def screen_img_data(self):
         return self.sv.GetScreenImg()
+
+    def now_window(self):
+        self.sv.switch_to_now_window()
 
     def map_position_distance(self,now_position):
         '''
@@ -41,8 +45,10 @@ class AutoMoney():
         #人物 走到 一个位置
         self.map_index = (self.map_index + random_step) % len(MAP_INDEX)
 
+
     def move_big_map(self):
         # 切换到 当前窗口 现在 pass
+        self.now_window()
 
         #按下 Tab 键，打开大地图   tap_key 是按一下按键 press_key是 按住按键
         self.k.tap_key(self.k.tab_key)
@@ -58,8 +64,9 @@ class AutoMoney():
 
     def route_plan(self):
         position_img = self.now_img[POSITION_Y1:POSITION_Y2,POSITION_X1:POSITION_X2,:]  #人物当前 坐标的 图像数据
-        position_data = self.recognize_position.return_position(position_img)   #人物当前坐标  None or [x,y]
+        position_data = self.recognize_position.return_position(position_img)   #获得 人物当前坐标  None or [x,y]
         distince = self.map_position_distance(position_data)   #人物当前坐标 和 self.map_index 目标坐标 之间的距离
+        # 如果目标的坐标 和 现在的坐标 举例小于一个数值，说明到达目标点附近， 需要移动到 下一个目标点
         if position_data and distince <= DISTANCE_THRESHOLD:
             self.change_map_index()
         self.move_big_map()
@@ -67,11 +74,11 @@ class AutoMoney():
     def run(self):
         while self.status == 0:
             self.now_img = self.screen_img_data()
-            boxes = []
+            boxes = None     #对 截取的图片 进行侦测 和 分类，看下有没有侦测到 目标，如果没有 移动人物
             if boxes:
                 pass
             else:
-                # 没有 目标，移动人物 到下一个 坐标点。
+                # 路径规划
                 self.route_plan()
                 time.sleep(RUN_TIME)  #等待人物 移动
                 self.m.click(self.left_x + WIN_W/2,self.left_y + WIN_H/2) #点击人物，让人物状态转为静止，self.status = 0

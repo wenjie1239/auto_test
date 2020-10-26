@@ -24,8 +24,8 @@ class DropBlock2D(nn.Module):
 
     def __init__(self, keep_prob=0.9, block_size=7):
         super(DropBlock2D, self).__init__()
-        self.keep_prob = keep_prob
-        self.block_size = block_size
+        self.keep_prob = keep_prob              #给定的 一个 伯努利概率
+        self.block_size = block_size            #给定的 遮挡块 大小 ，可以为 1,3,5,7  当数据为1时，为dropout
 
     def forward(self, input):
         if not self.training or self.keep_prob == 1:
@@ -33,7 +33,7 @@ class DropBlock2D(nn.Module):
         gamma = (1. - self.keep_prob) / self.block_size ** 2
         for sh in input.shape[2:]:
             gamma *= sh / (sh - self.block_size + 1)
-        M = torch.bernoulli(torch.ones_like(input) * gamma)
+        M = torch.bernoulli(torch.ones_like(input) * gamma)    # 传入一个矩阵， 输出一个 形状相识的 伯努利分布 的矩阵
         Msum = F.conv2d(M,
                         torch.ones((input.shape[1], 1, self.block_size, self.block_size)).to(device=input.device,
                                                                                              dtype=input.dtype),

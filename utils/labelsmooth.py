@@ -22,3 +22,12 @@ class LabelSmoothingCrossEntropy(nn.Module):
 
 if __name__ == '__main__':
     loss_fn = LabelSmoothingCrossEntropy()
+
+
+    '''
+    lebal_smooth :
+    
+    将 标签中 的分类由   [[0,0,1],[0,1,0]]   改成 [[0.05,0.05,0.9],[0.05,0.9,0.05]]
+    
+    al
+    '''

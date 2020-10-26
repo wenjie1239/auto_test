@@ -82,7 +82,8 @@ class ScreenViewer:
         self.mut.release()
         return s
         
-
+    def switch_to_now_window(self):
+        win32gui.SetForegroundWindow(self.hwnd)
         
     def GetScreenImg(self):
         '''
